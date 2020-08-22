@@ -10,7 +10,7 @@
 #include "LinuxX11Environment.h"
 #include "Engine.h"
 
-#include "LinuxGLLegacyInterface.h"
+#include "LinuxGLXLegacyInterface.h"
 #include "LinuxContextMenu.h"
 
 #include <X11/cursorfont.h>
@@ -122,7 +122,7 @@ void LinuxX11Environment::update()
 
 Graphics *LinuxX11Environment::createRenderer()
 {
-	return new LinuxGLLegacyInterface(m_display, m_window);
+	return new LinuxGLXLegacyInterface(m_display, m_window);
 }
 
 ContextMenu *LinuxX11Environment::createContextMenu()

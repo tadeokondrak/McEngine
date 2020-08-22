@@ -24,11 +24,11 @@ typedef unsigned char BYTE;
 
 XVisualInfo *getVisualInfo(Display *display);
 
-class LinuxGLLegacyInterface : public OpenGLLegacyInterface
+class LinuxGLXLegacyInterface : public OpenGLLegacyInterface
 {
 public:
-	LinuxGLLegacyInterface(Display *display, Window window);
-	virtual ~LinuxGLLegacyInterface();
+	LinuxGLXLegacyInterface(Display *display, Window window);
+	virtual ~LinuxGLXLegacyInterface();
 
 	// scene
 	void endScene();
