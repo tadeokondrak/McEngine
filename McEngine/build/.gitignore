@@ -1,0 +1,6 @@
+.ninja_deps
+.ninja_log
+McEngine
+__pycache__
+build.ninja
+src
