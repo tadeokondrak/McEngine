@@ -17,13 +17,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xresource.h>
 
-#include <dirent.h>
-#include <libgen.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/param.h>
 #include <unistd.h>
-#include <pwd.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -40,7 +34,7 @@ typedef struct
 bool LinuxX11Environment::m_bResizable = true;
 std::vector<McRect> LinuxX11Environment::m_vMonitors;
 
-LinuxX11Environment::LinuxX11Environment(Display *display, Window window) : Environment()
+LinuxX11Environment::LinuxX11Environment(Display *display, Window window) : LinuxEnvironment()
 {
 	m_display = display;
 	m_window = window;
@@ -130,11 +124,6 @@ ContextMenu *LinuxX11Environment::createContextMenu()
 	return new LinuxContextMenu();
 }
 
-Environment::OS LinuxX11Environment::getOS()
-{
-	return Environment::OS::OS_LINUX;
-}
-
 void LinuxX11Environment::shutdown()
 {
 	XEvent ev;
@@ -155,180 +144,6 @@ void LinuxX11Environment::restart()
 {
 	m_bIsRestartScheduled = true;
 	shutdown();
-}
-
-void LinuxX11Environment::sleep(unsigned int us)
-{
-	usleep(us);
-}
-
-UString LinuxX11Environment::getExecutablePath()
-{
-	char buf[4096];
-	memset(buf, '\0', 4096);
-	if (readlink("/proc/self/exe", buf, 4095) != -1)
-		return UString(buf);
-	else
-		return UString("");
-}
-
-void LinuxX11Environment::openURLInDefaultBrowser(UString url)
-{
-	if (fork() == 0)
-		exit(execl("/usr/bin/xdg-open", "xdg-open", url.toUtf8(), (char*)0));
-}
-
-UString LinuxX11Environment::getUsername()
-{
-	passwd *pwd = getpwuid(getuid());
-	if (pwd != NULL && pwd->pw_name != NULL)
-		return UString(pwd->pw_name);
-	else
-		return UString("");
-}
-
-UString LinuxX11Environment::getUserDataPath()
-{
-	passwd *pwd = getpwuid(getuid());
-	if (pwd != NULL && pwd->pw_dir != NULL)
-		return UString(pwd->pw_dir);
-	else
-		return UString("");
-}
-
-bool LinuxX11Environment::fileExists(UString filename)
-{
-	return std::ifstream(filename.toUtf8()).good();
-}
-
-bool LinuxX11Environment::directoryExists(UString directoryName)
-{
-	DIR *dir = opendir(directoryName.toUtf8());
-	if (dir)
-	{
-		closedir(dir);
-		return true;
-	}
-	else if (ENOENT == errno) // not a directory
-	{
-	}
-	else // something else broke
-	{
-	}
-	return false;
-}
-
-bool LinuxX11Environment::createDirectory(UString directoryName)
-{
-	return mkdir(directoryName.toUtf8(), DEFFILEMODE) != -1;
-}
-
-bool LinuxX11Environment::renameFile(UString oldFileName, UString newFileName)
-{
-	return rename(oldFileName.toUtf8(), newFileName.toUtf8()) != -1;
-}
-
-bool LinuxX11Environment::deleteFile(UString filePath)
-{
-	return remove(filePath.toUtf8()) == 0;
-}
-
-std::vector<UString> LinuxX11Environment::getFilesInFolder(UString folder)
-{
-	std::vector<UString> files;
-
-	struct dirent **namelist;
-	int n = scandir(folder.toUtf8(), &namelist, getFilesInFolderFilter, alphasort);
-	if (n < 0)
-	{
-		///debugLog("LinuxX11Environment::getFilesInFolder() error, scandir() returned %i!\n", n);
-		return files;
-	}
-
-	while (n--)
-	{
-		const char *name = namelist[n]->d_name;
-		UString uName = UString(name);
-		UString fullName = folder;
-		fullName.append(uName);
-		free(namelist[n]);
-
-		struct stat stDirInfo;
-		int lstatret = lstat(fullName.toUtf8(), &stDirInfo);
-		if (lstatret < 0)
-		{
-			//perror (name);
-			//debugLog("LinuxX11Environment::getFilesInFolder() error, lstat() returned %i!\n", lstatret);
-			continue;
-		}
-
-		if (!S_ISDIR(stDirInfo.st_mode))
-			files.push_back(uName);
-	}
-	free(namelist);
-
-	return files;
-}
-
-std::vector<UString> LinuxX11Environment::getFoldersInFolder(UString folder)
-{
-	std::vector<UString> folders;
-
-	struct dirent **namelist;
-	int n = scandir(folder.toUtf8(), &namelist, getFoldersInFolderFilter, alphasort);
-	if (n < 0)
-	{
-		///debugLog("LinuxX11Environment::getFilesInFolder() error, scandir() returned %i!\n", n);
-		return folders;
-	}
-
-	while (n--)
-	{
-		const char *name = namelist[n]->d_name;
-		UString uName = UString(name);
-		UString fullName = folder;
-		fullName.append(uName);
-		free(namelist[n]);
-
-		struct stat stDirInfo;
-		int lstatret = lstat(fullName.toUtf8(), &stDirInfo);
-		if (lstatret < 0)
-		{
-			///perror (name);
-			///debugLog("LinuxX11Environment::getFilesInFolder() error, lstat() returned %i!\n", lstatret);
-			continue;
-		}
-
-		if (S_ISDIR(stDirInfo.st_mode))
-			folders.push_back(uName);
-	}
-	free(namelist);
-
-	return folders;
-}
-
-std::vector<UString> LinuxX11Environment::getLogicalDrives()
-{
-	std::vector<UString> drives;
-	drives.push_back(UString("/"));
-	return drives;
-}
-
-UString LinuxX11Environment::getFolderFromFilePath(UString filepath)
-{
-	if (directoryExists(filepath)) // indirect check if this is already a valid directory (and not a file)
-		return filepath;
-	else
-		return UString(dirname((char*)filepath.toUtf8()));
-}
-
-UString LinuxX11Environment::getFileExtensionFromFilePath(UString filepath, bool includeDot)
-{
-	const int idx = filepath.findLast(".");
-	if (idx != -1)
-		return filepath.substr(idx+1);
-	else
-		return UString("");
 }
 
 UString LinuxX11Environment::getClipBoardText()
@@ -822,20 +637,6 @@ UString LinuxX11Environment::keyCodeToString(KEYCODE keyCode)
 {
 	const char *name = XKeysymToString(keyCode);
 	return name != NULL ? UString(name) : UString("");
-}
-
-
-
-// helper functions
-
-int LinuxX11Environment::getFilesInFolderFilter(const struct dirent *entry)
-{
-	return 1;
-}
-
-int LinuxX11Environment::getFoldersInFolderFilter(const struct dirent *entry)
-{
-	return 1;
 }
 
 Cursor LinuxX11Environment::makeBlankCursor()

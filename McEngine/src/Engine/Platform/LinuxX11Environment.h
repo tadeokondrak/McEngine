@@ -10,12 +10,12 @@
 #ifndef LINUXX11ENVIRONMENT_H
 #define LINUXX11ENVIRONMENT_H
 
-#include "Environment.h"
+#include "LinuxEnvironment.h"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
-class LinuxX11Environment : public Environment
+class LinuxX11Environment : public LinuxEnvironment
 {
 public:
 	LinuxX11Environment(Display *display, Window window);
@@ -28,28 +28,8 @@ public:
 	ContextMenu *createContextMenu();
 
 	// system
-	OS getOS();
 	void shutdown();
 	void restart();
-	void sleep(unsigned int us);
-	UString getExecutablePath();
-	void openURLInDefaultBrowser(UString url);
-
-	// user
-	UString getUsername();
-	UString getUserDataPath();
-
-	// file IO
-	bool fileExists(UString filename);
-	bool directoryExists(UString directoryName);
-	bool createDirectory(UString directoryName);
-	bool renameFile(UString oldFileName, UString newFileName);
-	bool deleteFile(UString filePath);
-	std::vector<UString> getFilesInFolder(UString folder);
-	std::vector<UString> getFoldersInFolder(UString folder);
-	std::vector<UString> getLogicalDrives();
-	UString getFolderFromFilePath(UString filepath);
-	UString getFileExtensionFromFilePath(UString filepath, bool includeDot = false);
 
 	// clipboard
 	UString getClipBoardText();
@@ -110,9 +90,6 @@ public:
 	void handleSelectionRequest(XSelectionRequestEvent &evt);
 
 private:
-	static int getFilesInFolderFilter(const struct dirent *entry);
-	static int getFoldersInFolderFilter(const struct dirent *entry);
-
 	void setWindowResizableInt(bool resizable, Vector2 windowSize);
 	Vector2 getWindowSizeServer();
 
