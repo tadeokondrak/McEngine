@@ -7,19 +7,19 @@
 
 #ifdef __linux__
 
-#ifndef LINUXENVIRONMENT_H
-#define LINUXENVIRONMENT_H
+#ifndef LINUXX11ENVIRONMENT_H
+#define LINUXX11ENVIRONMENT_H
 
 #include "Environment.h"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
-class LinuxEnvironment : public Environment
+class LinuxX11Environment : public Environment
 {
 public:
-	LinuxEnvironment(Display *display, Window window);
-	virtual ~LinuxEnvironment();
+	LinuxX11Environment(Display *display, Window window);
+	virtual ~LinuxX11Environment();
 
 	void update();
 

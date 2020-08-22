@@ -7,7 +7,7 @@
 
 #ifdef __linux__
 
-#include "LinuxEnvironment.h"
+#include "LinuxX11Environment.h"
 #include "Engine.h"
 
 #include "LinuxGLLegacyInterface.h"
@@ -37,10 +37,10 @@ typedef struct
 	unsigned long   status;
 } Hints;
 
-bool LinuxEnvironment::m_bResizable = true;
-std::vector<McRect> LinuxEnvironment::m_vMonitors;
+bool LinuxX11Environment::m_bResizable = true;
+std::vector<McRect> LinuxX11Environment::m_vMonitors;
 
-LinuxEnvironment::LinuxEnvironment(Display *display, Window window) : Environment()
+LinuxX11Environment::LinuxX11Environment(Display *display, Window window) : Environment()
 {
 	m_display = display;
 	m_window = window;
@@ -100,12 +100,12 @@ LinuxEnvironment::LinuxEnvironment(Display *display, Window window) : Environmen
 	}
 }
 
-LinuxEnvironment::~LinuxEnvironment()
+LinuxX11Environment::~LinuxX11Environment()
 {
 	XFreeCursor(m_display, m_invisibleCursor);
 }
 
-void LinuxEnvironment::update()
+void LinuxX11Environment::update()
 {
 	if (!m_bCursorRequest)
 	{
@@ -120,22 +120,22 @@ void LinuxEnvironment::update()
 	m_bIsCursorInsideWindow = McRect(0, 0, engine->getScreenWidth(), engine->getScreenHeight()).contains(getMousePos());
 }
 
-Graphics *LinuxEnvironment::createRenderer()
+Graphics *LinuxX11Environment::createRenderer()
 {
 	return new LinuxGLLegacyInterface(m_display, m_window);
 }
 
-ContextMenu *LinuxEnvironment::createContextMenu()
+ContextMenu *LinuxX11Environment::createContextMenu()
 {
 	return new LinuxContextMenu();
 }
 
-Environment::OS LinuxEnvironment::getOS()
+Environment::OS LinuxX11Environment::getOS()
 {
 	return Environment::OS::OS_LINUX;
 }
 
-void LinuxEnvironment::shutdown()
+void LinuxX11Environment::shutdown()
 {
 	XEvent ev;
 	memset(&ev, 0, sizeof (ev));
@@ -151,18 +151,18 @@ void LinuxEnvironment::shutdown()
 	XSendEvent(m_display, m_window, false, NoEventMask, &ev);
 }
 
-void LinuxEnvironment::restart()
+void LinuxX11Environment::restart()
 {
 	m_bIsRestartScheduled = true;
 	shutdown();
 }
 
-void LinuxEnvironment::sleep(unsigned int us)
+void LinuxX11Environment::sleep(unsigned int us)
 {
 	usleep(us);
 }
 
-UString LinuxEnvironment::getExecutablePath()
+UString LinuxX11Environment::getExecutablePath()
 {
 	char buf[4096];
 	memset(buf, '\0', 4096);
@@ -172,13 +172,13 @@ UString LinuxEnvironment::getExecutablePath()
 		return UString("");
 }
 
-void LinuxEnvironment::openURLInDefaultBrowser(UString url)
+void LinuxX11Environment::openURLInDefaultBrowser(UString url)
 {
 	if (fork() == 0)
 		exit(execl("/usr/bin/xdg-open", "xdg-open", url.toUtf8(), (char*)0));
 }
 
-UString LinuxEnvironment::getUsername()
+UString LinuxX11Environment::getUsername()
 {
 	passwd *pwd = getpwuid(getuid());
 	if (pwd != NULL && pwd->pw_name != NULL)
@@ -187,7 +187,7 @@ UString LinuxEnvironment::getUsername()
 		return UString("");
 }
 
-UString LinuxEnvironment::getUserDataPath()
+UString LinuxX11Environment::getUserDataPath()
 {
 	passwd *pwd = getpwuid(getuid());
 	if (pwd != NULL && pwd->pw_dir != NULL)
@@ -196,12 +196,12 @@ UString LinuxEnvironment::getUserDataPath()
 		return UString("");
 }
 
-bool LinuxEnvironment::fileExists(UString filename)
+bool LinuxX11Environment::fileExists(UString filename)
 {
 	return std::ifstream(filename.toUtf8()).good();
 }
 
-bool LinuxEnvironment::directoryExists(UString directoryName)
+bool LinuxX11Environment::directoryExists(UString directoryName)
 {
 	DIR *dir = opendir(directoryName.toUtf8());
 	if (dir)
@@ -218,22 +218,22 @@ bool LinuxEnvironment::directoryExists(UString directoryName)
 	return false;
 }
 
-bool LinuxEnvironment::createDirectory(UString directoryName)
+bool LinuxX11Environment::createDirectory(UString directoryName)
 {
 	return mkdir(directoryName.toUtf8(), DEFFILEMODE) != -1;
 }
 
-bool LinuxEnvironment::renameFile(UString oldFileName, UString newFileName)
+bool LinuxX11Environment::renameFile(UString oldFileName, UString newFileName)
 {
 	return rename(oldFileName.toUtf8(), newFileName.toUtf8()) != -1;
 }
 
-bool LinuxEnvironment::deleteFile(UString filePath)
+bool LinuxX11Environment::deleteFile(UString filePath)
 {
 	return remove(filePath.toUtf8()) == 0;
 }
 
-std::vector<UString> LinuxEnvironment::getFilesInFolder(UString folder)
+std::vector<UString> LinuxX11Environment::getFilesInFolder(UString folder)
 {
 	std::vector<UString> files;
 
@@ -241,7 +241,7 @@ std::vector<UString> LinuxEnvironment::getFilesInFolder(UString folder)
 	int n = scandir(folder.toUtf8(), &namelist, getFilesInFolderFilter, alphasort);
 	if (n < 0)
 	{
-		///debugLog("LinuxEnvironment::getFilesInFolder() error, scandir() returned %i!\n", n);
+		///debugLog("LinuxX11Environment::getFilesInFolder() error, scandir() returned %i!\n", n);
 		return files;
 	}
 
@@ -258,7 +258,7 @@ std::vector<UString> LinuxEnvironment::getFilesInFolder(UString folder)
 		if (lstatret < 0)
 		{
 			//perror (name);
-			//debugLog("LinuxEnvironment::getFilesInFolder() error, lstat() returned %i!\n", lstatret);
+			//debugLog("LinuxX11Environment::getFilesInFolder() error, lstat() returned %i!\n", lstatret);
 			continue;
 		}
 
@@ -270,7 +270,7 @@ std::vector<UString> LinuxEnvironment::getFilesInFolder(UString folder)
 	return files;
 }
 
-std::vector<UString> LinuxEnvironment::getFoldersInFolder(UString folder)
+std::vector<UString> LinuxX11Environment::getFoldersInFolder(UString folder)
 {
 	std::vector<UString> folders;
 
@@ -278,7 +278,7 @@ std::vector<UString> LinuxEnvironment::getFoldersInFolder(UString folder)
 	int n = scandir(folder.toUtf8(), &namelist, getFoldersInFolderFilter, alphasort);
 	if (n < 0)
 	{
-		///debugLog("LinuxEnvironment::getFilesInFolder() error, scandir() returned %i!\n", n);
+		///debugLog("LinuxX11Environment::getFilesInFolder() error, scandir() returned %i!\n", n);
 		return folders;
 	}
 
@@ -295,7 +295,7 @@ std::vector<UString> LinuxEnvironment::getFoldersInFolder(UString folder)
 		if (lstatret < 0)
 		{
 			///perror (name);
-			///debugLog("LinuxEnvironment::getFilesInFolder() error, lstat() returned %i!\n", lstatret);
+			///debugLog("LinuxX11Environment::getFilesInFolder() error, lstat() returned %i!\n", lstatret);
 			continue;
 		}
 
@@ -307,14 +307,14 @@ std::vector<UString> LinuxEnvironment::getFoldersInFolder(UString folder)
 	return folders;
 }
 
-std::vector<UString> LinuxEnvironment::getLogicalDrives()
+std::vector<UString> LinuxX11Environment::getLogicalDrives()
 {
 	std::vector<UString> drives;
 	drives.push_back(UString("/"));
 	return drives;
 }
 
-UString LinuxEnvironment::getFolderFromFilePath(UString filepath)
+UString LinuxX11Environment::getFolderFromFilePath(UString filepath)
 {
 	if (directoryExists(filepath)) // indirect check if this is already a valid directory (and not a file)
 		return filepath;
@@ -322,7 +322,7 @@ UString LinuxEnvironment::getFolderFromFilePath(UString filepath)
 		return UString(dirname((char*)filepath.toUtf8()));
 }
 
-UString LinuxEnvironment::getFileExtensionFromFilePath(UString filepath, bool includeDot)
+UString LinuxX11Environment::getFileExtensionFromFilePath(UString filepath, bool includeDot)
 {
 	const int idx = filepath.findLast(".");
 	if (idx != -1)
@@ -331,55 +331,55 @@ UString LinuxEnvironment::getFileExtensionFromFilePath(UString filepath, bool in
 		return UString("");
 }
 
-UString LinuxEnvironment::getClipBoardText()
+UString LinuxX11Environment::getClipBoardText()
 {
 	return getClipboardTextInt();
 }
 
-void LinuxEnvironment::setClipBoardText(UString text)
+void LinuxX11Environment::setClipBoardText(UString text)
 {
 	setClipBoardTextInt(text);
 }
 
-void LinuxEnvironment::showMessageInfo(UString title, UString message)
+void LinuxX11Environment::showMessageInfo(UString title, UString message)
 {
 	// TODO:
 }
 
-void LinuxEnvironment::showMessageWarning(UString title, UString message)
+void LinuxX11Environment::showMessageWarning(UString title, UString message)
 {
 	// TODO:
 }
 
-void LinuxEnvironment::showMessageError(UString title, UString message)
+void LinuxX11Environment::showMessageError(UString title, UString message)
 {
 	// TODO:
 }
 
-void LinuxEnvironment::showMessageErrorFatal(UString title, UString message)
+void LinuxX11Environment::showMessageErrorFatal(UString title, UString message)
 {
 	// TODO:
 }
 
-UString LinuxEnvironment::openFileWindow(const char *filetypefilters, UString title, UString initialpath)
-{
-	// TODO:
-	return UString("");
-}
-
-UString LinuxEnvironment::openFolderWindow(UString title, UString initialpath)
+UString LinuxX11Environment::openFileWindow(const char *filetypefilters, UString title, UString initialpath)
 {
 	// TODO:
 	return UString("");
 }
 
-void LinuxEnvironment::focus()
+UString LinuxX11Environment::openFolderWindow(UString title, UString initialpath)
+{
+	// TODO:
+	return UString("");
+}
+
+void LinuxX11Environment::focus()
 {
 	XRaiseWindow(m_display, m_window);
 	XMapRaised(m_display, m_window);
 }
 
-void LinuxEnvironment::center()
+void LinuxX11Environment::center()
 {
 	Vector2 windowSize = getWindowSize();
 	if (m_bResizeDelayHack)
@@ -390,12 +390,12 @@ void LinuxEnvironment::center()
 	XMoveResizeWindow(m_display, m_window, WidthOfScreen(defaultScreen)/2 - (unsigned int)(windowSize.x/2), HeightOfScreen(defaultScreen)/2 - (unsigned int)(windowSize.y/2), (unsigned int)windowSize.x, (unsigned int)windowSize.y);
 }
 
-void LinuxEnvironment::minimize()
+void LinuxX11Environment::minimize()
 {
 	XIconifyWindow(m_display, m_window, 0);
 }
 
-void LinuxEnvironment::maximize()
+void LinuxX11Environment::maximize()
 {
 	XMapWindow(m_display, m_window);
 
@@ -411,7 +411,7 @@ void LinuxEnvironment::maximize()
 			(unsigned int)getNativeScreenSize().y);
 }
 
-void LinuxEnvironment::enableFullscreen()
+void LinuxX11Environment::enableFullscreen()
 {
 	if (m_bFullScreen) return;
 
@@ -481,7 +481,7 @@ void LinuxEnvironment::enableFullscreen()
 	m_bFullScreen = true;
 }
 
-void LinuxEnvironment::disableFullscreen()
+void LinuxX11Environment::disableFullscreen()
 {
 	if (!m_bFullScreen) return;
 
@@ -543,18 +543,18 @@ void LinuxEnvironment::disableFullscreen()
 	m_bFullScreen = false;
 }
 
-void LinuxEnvironment::setWindowTitle(UString title)
+void LinuxX11Environment::setWindowTitle(UString title)
 {
 	XStoreName(m_display, m_window, title.toUtf8());
 }
 
-void LinuxEnvironment::setWindowPos(int x, int y)
+void LinuxX11Environment::setWindowPos(int x, int y)
 {
 	XMapWindow(m_display, m_window);
 	XMoveWindow(m_display, m_window, x, y);
 }
 
-void LinuxEnvironment::setWindowSize(int width, int height)
+void LinuxX11Environment::setWindowSize(int width, int height)
 {
 	// due to the way resizability works, we have to temporarily disable it to be able to resize the window (because min/max is fixed)
 	const Vector2 windowPos = getWindowPos();
@@ -576,12 +576,12 @@ void LinuxEnvironment::setWindowSize(int width, int height)
 	XFlush(m_display);
 }
 
-void LinuxEnvironment::setWindowResizable(bool resizable)
+void LinuxX11Environment::setWindowResizable(bool resizable)
 {
 	setWindowResizableInt(resizable, getWindowSize());
 }
 
-void LinuxEnvironment::setWindowResizableInt(bool resizable, Vector2 windowSize)
+void LinuxX11Environment::setWindowResizableInt(bool resizable, Vector2 windowSize)
 {
 	m_bResizable = resizable;
 
@@ -607,18 +607,18 @@ void LinuxEnvironment::setWindowResizableInt(bool resizable, Vector2 windowSize)
 	XFlush(m_display);
 }
 
-void LinuxEnvironment::setWindowGhostCorporeal(bool corporeal)
+void LinuxX11Environment::setWindowGhostCorporeal(bool corporeal)
 {
 	// TODO:
 }
 
-void LinuxEnvironment::setMonitor(int monitor)
+void LinuxX11Environment::setMonitor(int monitor)
 {
 	// TODO:
 	center();
 }
 
-Vector2 LinuxEnvironment::getWindowPos()
+Vector2 LinuxX11Environment::getWindowPos()
 {
 	// client coordinates
 	Window rootRet;
@@ -646,7 +646,7 @@ Vector2 LinuxEnvironment::getWindowPos()
 	*/
 }
 
-Vector2 LinuxEnvironment::getWindowSize()
+Vector2 LinuxX11Environment::getWindowSize()
 {
 	// client size (engine coordinates)
 	Window rootRet;
@@ -662,7 +662,7 @@ Vector2 LinuxEnvironment::getWindowSize()
 	return Vector2(width, height);
 }
 
-Vector2 LinuxEnvironment::getWindowSizeServer()
+Vector2 LinuxX11Environment::getWindowSizeServer()
 {
 	// server size
 	XWindowAttributes xwa;
@@ -671,56 +671,56 @@ Vector2 LinuxEnvironment::getWindowSizeServer()
 	return Vector2(xwa.width, xwa.height);
 }
 
-int LinuxEnvironment::getMonitor()
+int LinuxX11Environment::getMonitor()
 {
 	// TODO:
 	return 0;
 }
 
-std::vector<McRect> LinuxEnvironment::getMonitors()
+std::vector<McRect> LinuxX11Environment::getMonitors()
 {
 	return m_vMonitors;
 }
 
-Vector2 LinuxEnvironment::getNativeScreenSize()
+Vector2 LinuxX11Environment::getNativeScreenSize()
 {
 	return Vector2(WidthOfScreen(DefaultScreenOfDisplay(m_display)), HeightOfScreen(DefaultScreenOfDisplay(m_display)));
 }
 
-McRect LinuxEnvironment::getVirtualScreenRect()
+McRect LinuxX11Environment::getVirtualScreenRect()
 {
 	// TODO:
 	return McRect(0,0,1,1);
 }
 
-McRect LinuxEnvironment::getDesktopRect()
+McRect LinuxX11Environment::getDesktopRect()
 {
 	// TODO:
 	Vector2 screen = getNativeScreenSize();
 	return McRect(0, 0, screen.x, screen.y);
 }
 
-int LinuxEnvironment::getDPI()
+int LinuxX11Environment::getDPI()
 {
 	return clamp<int>(m_iDPI, 96, 96*4); // sanity clamp
 }
 
-bool LinuxEnvironment::isCursorInWindow()
+bool LinuxX11Environment::isCursorInWindow()
 {
 	return m_bIsCursorInsideWindow;
 }
 
-bool LinuxEnvironment::isCursorVisible()
+bool LinuxX11Environment::isCursorVisible()
 {
 	return m_bCursorVisible;
 }
 
-bool LinuxEnvironment::isCursorClipped()
+bool LinuxX11Environment::isCursorClipped()
 {
 	return m_bCursorClipped;
 }
 
-Vector2 LinuxEnvironment::getMousePos()
+Vector2 LinuxX11Environment::getMousePos()
 {
 	Window rootRet, childRet;
 	unsigned int mask;
@@ -733,17 +733,17 @@ Vector2 LinuxEnvironment::getMousePos()
 	return Vector2(childX, childY);
 }
 
-McRect LinuxEnvironment::getCursorClip()
+McRect LinuxX11Environment::getCursorClip()
 {
 	return m_cursorClip;
 }
 
-CURSORTYPE LinuxEnvironment::getCursor()
+CURSORTYPE LinuxX11Environment::getCursor()
 {
 	return m_cursorType;
 }
 
-void LinuxEnvironment::setCursor(CURSORTYPE cur)
+void LinuxX11Environment::setCursor(CURSORTYPE cur)
 {
 	m_cursorType = cur;
 
@@ -783,19 +783,19 @@ void LinuxEnvironment::setCursor(CURSORTYPE cur)
 	m_bCursorRequest = true;
 }
 
-void LinuxEnvironment::setCursorVisible(bool visible)
+void LinuxX11Environment::setCursorVisible(bool visible)
 {
 	m_bCursorVisible = visible;
 	setCursorInt(visible ? m_mouseCursor : m_invisibleCursor);
 }
 
-void LinuxEnvironment::setMousePos(int x, int y)
+void LinuxX11Environment::setMousePos(int x, int y)
 {
 	XWarpPointer(m_display, None, m_window, 0, 0, 0, 0, x, y);
 	XSync(m_display, False);
 }
 
-void LinuxEnvironment::setCursorClip(bool clip, McRect rect)
+void LinuxX11Environment::setCursorClip(bool clip, McRect rect)
 {
 	if (clip)
 	{
@@ -818,7 +818,7 @@ void LinuxEnvironment::setCursorClip(bool clip, McRect rect)
 	}
 }
 
-UString LinuxEnvironment::keyCodeToString(KEYCODE keyCode)
+UString LinuxX11Environment::keyCodeToString(KEYCODE keyCode)
 {
 	const char *name = XKeysymToString(keyCode);
 	return name != NULL ? UString(name) : UString("");
@@ -828,17 +828,17 @@ UString LinuxEnvironment::keyCodeToString(KEYCODE keyCode)
 
 // helper functions
 
-int LinuxEnvironment::getFilesInFolderFilter(const struct dirent *entry)
+int LinuxX11Environment::getFilesInFolderFilter(const struct dirent *entry)
 {
 	return 1;
 }
 
-int LinuxEnvironment::getFoldersInFolderFilter(const struct dirent *entry)
+int LinuxX11Environment::getFoldersInFolderFilter(const struct dirent *entry)
 {
 	return 1;
 }
 
-Cursor LinuxEnvironment::makeBlankCursor()
+Cursor LinuxX11Environment::makeBlankCursor()
 {
 	static char data[1] = {0};
 	Cursor cursor;
@@ -848,7 +848,7 @@ Cursor LinuxEnvironment::makeBlankCursor()
 	blank = XCreateBitmapFromData(m_display, m_window, data, 1, 1);
 	if (blank == None)
 	{
-		debugLog("LinuxEnvironment::makeBlankCursor() fatal error, XCreateBitmapFromData() out of memory!\n");
+		debugLog("LinuxX11Environment::makeBlankCursor() fatal error, XCreateBitmapFromData() out of memory!\n");
 		return 0;
 	}
 	cursor = XCreatePixmapCursor(m_display, blank, blank, &dummy, &dummy, 0, 0);
@@ -857,7 +857,7 @@ Cursor LinuxEnvironment::makeBlankCursor()
 	return cursor;
 }
 
-void LinuxEnvironment::setCursorInt(Cursor cursor)
+void LinuxX11Environment::setCursorInt(Cursor cursor)
 {
 	if (m_bPrevCursorHack)
 		XUndefineCursor(m_display, m_window);
@@ -866,7 +866,7 @@ void LinuxEnvironment::setCursorInt(Cursor cursor)
 	XDefineCursor(m_display, m_window, cursor);
 }
 
-UString LinuxEnvironment::readWindowProperty(Window window, Atom prop, Atom fmt /* XA_STRING or UTF8_STRING */, bool deleteAfterReading)
+UString LinuxX11Environment::readWindowProperty(Window window, Atom prop, Atom fmt /* XA_STRING or UTF8_STRING */, bool deleteAfterReading)
 {
 	UString returnData = UString("");
 	unsigned char *clipData;
@@ -909,7 +909,7 @@ UString LinuxEnvironment::readWindowProperty(Window window, Atom prop, Atom fmt 
 	return returnData;
 }
 
-bool LinuxEnvironment::requestSelectionContent(UString &selection_content, Atom selection, Atom requested_format)
+bool LinuxX11Environment::requestSelectionContent(UString &selection_content, Atom selection, Atom requested_format)
 {
 	// send a SelectionRequest to the window owning the selection and waits for its answer (with a timeout)
 	// the selection owner will be asked to set the MCENGINE_SEL property on m_window with the selection content
@@ -939,11 +939,11 @@ bool LinuxEnvironment::requestSelectionContent(UString &selection_content, Atom 
 	}
 	while (timeoutMs > 0);
 
-	debugLog("LinuxEnvironment::requestSelectionContent() : Timeout!\n");
+	debugLog("LinuxX11Environment::requestSelectionContent() : Timeout!\n");
 	return false;
 }
 
-void LinuxEnvironment::handleSelectionRequest(XSelectionRequestEvent &evt)
+void LinuxX11Environment::handleSelectionRequest(XSelectionRequestEvent &evt)
 {
 	// called from the event loop in response to SelectionRequest events
 	// the selection content is sent to the target window as a window property
@@ -985,7 +985,7 @@ void LinuxEnvironment::handleSelectionRequest(XSelectionRequestEvent &evt)
 		}
 	}
 	else
-		debugLog("LinuxEnvironment::handleSelectionRequest() : Requested unsupported clipboard!\n");
+		debugLog("LinuxX11Environment::handleSelectionRequest() : Requested unsupported clipboard!\n");
 
 	if (data)
 	{
@@ -1005,14 +1005,14 @@ void LinuxEnvironment::handleSelectionRequest(XSelectionRequestEvent &evt)
 	XSendEvent(evt.display, evt.requestor, 0, NoEventMask, (XEvent *) &reply);
 }
 
-void LinuxEnvironment::setClipBoardTextInt(UString clipText)
+void LinuxX11Environment::setClipBoardTextInt(UString clipText)
 {
 	m_sLocalClipboardContent = clipText;
 	XSetSelectionOwner(m_display, XA_PRIMARY, m_window, CurrentTime);
 	XSetSelectionOwner(m_display, m_atom_CLIPBOARD, m_window, CurrentTime);
 }
 
-UString LinuxEnvironment::getClipboardTextInt()
+UString LinuxX11Environment::getClipboardTextInt()
 {
 	UString content;
 

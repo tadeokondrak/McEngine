@@ -11,7 +11,7 @@
 
 #ifdef MCENGINE_FEATURE_OPENGL
 
-#include "LinuxEnvironment.h"
+#include "LinuxX11Environment.h"
 #include "Engine.h"
 #include "ConVar.h"
 
